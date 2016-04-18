@@ -64,7 +64,7 @@ class Handler(BaseHandler):
             cID = cURL.strip('https://vndb.org/c')
             
             print "Japanese Name: "+jName
-            print "Romaji Name: "+rName
+            print "Romanji Name: "+rName
             print "URL: "+cURL
             print "ID: "+cID
             
@@ -78,9 +78,7 @@ class Handler(BaseHandler):
             self.crawl(cURL, callback=self.character_page)
             
             """
-            
             print "this character has been appeared in: "
-            
             
             for each2 in each.children('td.tc2>b.grayedout>a').items():
                 vnTitle = each2.attr.title.replace('\'','\\\'')
@@ -95,13 +93,9 @@ class Handler(BaseHandler):
                     c.commit()
                 except:
                     c.rollback()
-            
             """
-            
             print
-            # f.write('\r\n')
             
-        # f.close()
         cur.close()
         c.close()
                    
@@ -110,7 +104,10 @@ class Handler(BaseHandler):
         c2 = MySQLdb.connect(host=dbHost,user=dbUsername,passwd=dbPassword,db=dbName,charset="utf8")
         cur2 = c2.cursor()
         
-        pURL = response.doc('div.chardetails.charspoil.charspoil_0>div.charimg img').attr.src
+        if response.doc('div.chardetails.charspoil.charspoil_0>div.charimg').text().find("No image uploaded yet") < 0:
+            pURL = response.doc('div.chardetails.charspoil.charspoil_0>div.charimg>img').attr.src
+        else:
+            pURL = ""
         cID = response.url.strip('https://vndb.org/c')
         
         print "Picture URL: "+pURL
@@ -148,7 +145,6 @@ class Handler(BaseHandler):
                             cur2.execute(statement)
                             c2.commit()
                         except:
-                            print statement
                             c2.rollback()
                         
                         print
@@ -157,8 +153,8 @@ class Handler(BaseHandler):
         cur2.close()
         c2.close()
         
-        
         return {
             "url": response.url,
             "title": response.doc('title').text(),
         }
+        
