@@ -20,7 +20,7 @@ class Handler(BaseHandler):
         global folder
         global wgetlog
         
-        title = response.doc('title').text()
+        title = response.doc('title').text().replace(' ', '_') # or my pack & encrypt shell script will NOT work properly
         mkdir = "cd \""+folder+"\" && if [ ! -d \""+title+"\" ]; then mkdir \""+title+"\"; fi && cd \""+title+"\" && if [ ! -d dumped ]; then mkdir dumped; fi" 
         os.system(mkdir)
         folder = folder+"/"+title
@@ -57,12 +57,12 @@ class Handler(BaseHandler):
         for each in response.doc('div.sni>a>img').items():
             imageURL = each.attr.src
        
-        wget = "cd \""+folder+"\" && wget \""+imageURL+"\""
+        wget = "cd \""+folder+"\" && wget -t1 \""+imageURL+"\""
         if wgetlog:
             wget = wget+" 2>> \""+wgetlog+"\""
         print wget
         os.system(wget)
-        
+            
         return {
             "url": response.url,
             "title": response.doc('title').text(),
