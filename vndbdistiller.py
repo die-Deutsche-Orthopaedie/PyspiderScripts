@@ -32,20 +32,34 @@ class Handler(BaseHandler):
         statement="CREATE TABLE IF NOT EXISTS `vns` (\
           `ID` int(11) NOT NULL,\
           `cID` int(11) NOT NULL,\
+          `pID` int(11) NOT NULL,\
           `IMC` text NOT NULL,\
           `Title` text NOT NULL,\
           `URL` text NOT NULL,\
           PRIMARY KEY (`ID`)\
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='VNs Table';"
+        try:
+            cur.execute(statement)
+            c.commit()
+        except:
+            c.rollback()
+        
+        statement="CREATE TABLE IF NOT EXISTS `cvr` (\
+          `cID` int(11) NOT NULL,\
+          `vnID` int(11) NOT NULL,\
+          `IMC` text NOT NULL\
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Character-VN Relations Table';"
         try:
             cur.execute(statement)
             c.commit()
         except:
             c.rollback()
-                
+              
         cur.close()
         c.close()        
-        
+        self.crawl('https://vndb.org/c13454', callback=self.character_page)
+        self.crawl('https://vndb.org/c13453', callback=self.character_page)
+        self.crawl('https://vndb.org/c465', callback=self.character_page)
         self.crawl('https://vndb.org/c/all?q=&fil=gender-f.trait_inc-29~146.tagspoil-0', callback=self.index_page)
         
     @config(age=10 * 24 * 60 * 60)
@@ -74,6 +88,7 @@ class Handler(BaseHandler):
                 c.commit()
             except:
                 c.rollback()
+            
             
             self.crawl(cURL, callback=self.character_page)
             
@@ -131,22 +146,112 @@ class Handler(BaseHandler):
                 for each2 in each.children('td>span.charspoil.charspoil_0').items():           
                     if sign == 1:
                         vnIMC = each2.text()[0:4]
-                        vnTitle = each2.children('a').text().replace('\'','\\\'')
-                        vnURL = each2.children('a').attr.href.replace('\'','\\\'')
-                        vnID = vnURL.strip('https://vndb.org/v').strip('/chars')
+                        if vnIMC.find("Main") < 0 and vnIMC.find("Side") < 0:
+                            vnIMC = "Undefined"
+                            vnTitle = each2.children('a').text().replace('\'','\\\'')
+                            vnURL = each2.children('a').attr.href.replace('\'','\\\'')
+                            vnpID = vnURL.strip('https://vndb.org/v').strip('/chars')
                         
-                        print vnIMC+" Character"
-                        print vnTitle
-                        print vnURL
-                        print vnID
+                            print vnIMC+" Character"
+                            print vnTitle
+                            print vnURL
+                            print vnpID
+                            print
+                            
+                            statement="insert into vns values ('"+vnpID+"', '', '"+vnTitle+"', '"+vnURL+"')"
+                            try:
+                                cur2.execute(statement)
+                                c2.commit()
+                            except:
+                                c2.rollback()
+                            
+                            statement="SELECT * FROM cvr WHERE cID = "+cID+" AND vnID = "+vnpID+""
+                            try:
+                                count = cur2.execute(statement)
+                                c2.commit()
+                            except:
+                                print statement
+                                c2.rollback()
+                                                        
+                            if count == 0:
+                                statement="insert into cvr values ('"+cID+"', '"+vnpID+"', '"+vnIMC+"')"
+                                try:
+                                    cur2.execute(statement)
+                                    c2.commit()
+                                except:
+                                    print statement
+                                    c2.rollback()
+                            
+                            for each3 in each2.children('span.charspoil.charspoil_0').items():
+                                vnIMC = each3.text()[2:6]
+                                vnTitle = each3.children('a').text().replace('\'','\\\'')
+                                vnURL = each3.children('a').attr.href.replace('\'','\\\'')
+                                vnID = vnURL.strip('https://vndb.org/v').strip('/chars')
+                            
+                                print vnIMC+" Character"
+                                print vnTitle
+                                print vnURL
+                                print vnID
+                                print
+                            
+                                statement="insert into vns values ('"+vnID+"', '"+vnpID+"', '"+vnTitle+"', '"+vnURL+"')"
+                                try:
+                                    cur2.execute(statement)
+                                    c2.commit()
+                                except:
+                                    c2.rollback()
+                                
+                                statement="SELECT * FROM cvr WHERE cID = "+cID+" AND vnID = "+vnID+""
+                                try:
+                                    count = cur2.execute(statement)
+                                    c2.commit()
+                                except:
+                                    print statement
+                                    c2.rollback()
+                                                                
+                                if count == 0:
+                                    statement="insert into cvr values ('"+cID+"', '"+vnID+"', '"+vnIMC+"')"
+                                    try:
+                                        cur2.execute(statement)
+                                        c2.commit()
+                                    except:
+                                        print statement
+                                        c2.rollback()
+                                    
+                        else:
+                            vnTitle = each2.children('a').text().replace('\'','\\\'')
+                            vnURL = each2.children('a').attr.href.replace('\'','\\\'')
+                            vnID = vnURL.strip('https://vndb.org/v').strip('/chars')
                         
-                        statement="insert into vns values ('"+vnID+"', '"+cID+"', '"+vnIMC+"', '"+vnTitle+"', '"+vnURL+"')"
-                        try:
-                            cur2.execute(statement)
-                            c2.commit()
-                        except:
-                            c2.rollback()
+                            print vnIMC+" Character"
+                            print vnTitle
+                            print vnURL
+                            print vnID
+                            print
                         
+                            statement="insert into vns values ('"+vnID+"', '', '"+vnTitle+"', '"+vnURL+"')"
+                            try:
+                                cur2.execute(statement)
+                                c2.commit()
+                            except:
+                                c2.rollback()
+                            
+                            statement="SELECT * FROM cvr WHERE cID = "+cID+" AND vnID = "+vnID+""
+                            try:
+                                count = cur2.execute(statement)
+                                c2.commit()
+                            except:
+                                c2.rollback()
+                            
+                            if count == 0:
+                                statement="insert into cvr values ('"+cID+"', '"+vnID+"', '"+vnIMC+"')"
+                                try:
+                                    cur2.execute(statement)
+                                    c2.commit()
+                                except:
+                                    print statement
+                                    c2.rollback()
+                                    
                         print
                 sign = 0
         
