@@ -31,9 +31,7 @@ class Handler(BaseHandler):
             
         statement="CREATE TABLE IF NOT EXISTS `vns` (\
           `ID` int(11) NOT NULL,\
-          `cID` int(11) NOT NULL,\
           `pID` int(11) NOT NULL,\
-          `IMC` text NOT NULL,\
           `Title` text NOT NULL,\
           `URL` text NOT NULL,\
           PRIMARY KEY (`ID`)\
